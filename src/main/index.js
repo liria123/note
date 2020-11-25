@@ -1,9 +1,5 @@
-import { app, BrowserWindow,Menu } from 'electron'
+import { app, BrowserWindow,Menu ,ipcMain} from 'electron'
 
-/**
- * Set `__static` path to static files in production
- * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
- */
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
@@ -14,10 +10,9 @@ const winURL = process.env.NODE_ENV === 'development'
   : `file://${__dirname}/index.html`
 
 function createWindow () {
-  /**
-   * Initial window options
-   */
-  Menu.setApplicationMenu(null)//隐藏菜单栏
+  //隐藏菜单栏
+  Menu.setApplicationMenu(null)
+  //创建浏览器窗口
   mainWindow = new BrowserWindow({
     height: 563,
     useContentSize: true,
@@ -32,19 +27,27 @@ function createWindow () {
 }
 
 app.on('ready', createWindow)
-
+//当所有窗口都被关闭后退出
 app.on('window-all-closed', () => {
+  // 在 macOS 上，除非用户用 Cmd + Q 确定地退出，
+  // 否则绝大部分应用及其菜单栏会保持激活。
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
 app.on('activate', () => {
+  // 在macOS上，当单击dock图标并且没有其他窗口打开时，
+  // 通常在应用程序中重新创建一个窗口。
   if (mainWindow === null) {
     createWindow()
   }
 })
-
+//自定义关闭窗口---执行关闭
+ipcMain.on('handelClose', function (res) {
+  //console.log("执行关闭操作")
+  app.quit()
+})
 /**
  * Auto Updater
  *
